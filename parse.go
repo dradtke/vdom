@@ -59,7 +59,7 @@ func parseToken(tree *Tree, token xml.Token, currentParent *Element) (nextParent
 		}
 		if currentParent != nil {
 			// Set the index based on how many children we've seen so far
-			el.index = append(currentParent.index, len(currentParent.children))
+			el.index = intAppend(currentParent.index, len(currentParent.children))
 			// Set this element's parent
 			el.parent = currentParent
 			// Add this element to the currentParent's children
@@ -131,7 +131,7 @@ func parseToken(tree *Tree, token xml.Token, currentParent *Element) (nextParent
 		}
 		if currentParent != nil {
 			// Set the index based on how many children we've seen so far
-			text.index = append(currentParent.index, len(currentParent.children))
+			text.index = intAppend(currentParent.index, len(currentParent.children))
 			// Set this text node's parent
 			text.parent = currentParent
 			// Add this text node to the currentParent's children
@@ -152,7 +152,7 @@ func parseToken(tree *Tree, token xml.Token, currentParent *Element) (nextParent
 		}
 		if currentParent != nil {
 			// Set the index based on how many children we've seen so far
-			comment.index = append(currentParent.index, len(currentParent.children))
+			comment.index = intAppend(currentParent.index, len(currentParent.children))
 			// Set this comment node's parent
 			comment.parent = currentParent
 			// Add this comment node to the currentParent's children
@@ -204,4 +204,13 @@ func wasAutoClosed(tree *Tree, tagName string) bool {
 	// The tag was autoclosed iff the last bytes to be read
 	// were not the closing tag.
 	return string(tree.reader.buf[start:stop]) != closingTag
+}
+
+// intAppend() is a redefinition of append() that explicitly creates
+// a new copy of the slice and copies the elements into it.
+func intAppend(slice []int, elems ...int) []int {
+	s := make([]int, len(slice)+len(elems))
+	copy(s, slice)
+	copy(s[len(slice):], elems)
+	return s
 }
