@@ -6,6 +6,17 @@ import (
 	"io"
 )
 
+var problemChild *Element
+
+func isProblemChild(node *Element) bool {
+	return node != nil &&
+		len(node.index) == 4 &&
+		node.index[0] == 1 &&
+		node.index[1] == 1 &&
+		node.index[2] == 1 &&
+		node.index[3] == 3
+}
+
 // Parse reads escaped html from src and returns a virtual tree structure
 // representing it. It returns an error if there was a problem parsing the html.
 func Parse(src []byte) (*Tree, error) {
@@ -33,6 +44,9 @@ func Parse(src []byte) (*Tree, error) {
 			return nil, err
 		} else {
 			currentParent = nextParent
+			if problemChild == nil && isProblemChild(currentParent) {
+				problemChild = currentParent
+			}
 		}
 	}
 	return tree, nil
@@ -131,7 +145,25 @@ func parseToken(tree *Tree, token xml.Token, currentParent *Element) (nextParent
 		}
 		if currentParent != nil {
 			// Set the index based on how many children we've seen so far
+			var origIndex []int
+			if problemChild != nil && isProblemChild(problemChild) {
+				origIndex = make([]int, len(problemChild.index))
+				copy(origIndex, problemChild.index)
+			}
 			text.index = append(currentParent.index, len(currentParent.children))
+			if origIndex != nil && !isProblemChild(problemChild) {
+				fmt.Printf("Node index was modified from %v to %v!\n", origIndex, problemChild.index)
+				fmt.Println("  problemChild = ", problemChild)
+				fmt.Println("  text = ", text)
+				fmt.Println("  currentParent = ", currentParent)
+				fmt.Println("  currentParent.index = ", currentParent.index)
+				fmt.Println("  len(currentParent.children) = ", len(currentParent.children))
+				/*
+					fmt.Printf("problemChild == currentParent: %t\n", problemChild == currentParent)
+					fmt.Printf("currentParent.index: %v\n", currentParent.index)
+					fmt.Printf("len(currentParent.children): %v\n", len(currentParent.children))
+				*/
+			}
 			// Set this text node's parent
 			text.parent = currentParent
 			// Add this text node to the currentParent's children
